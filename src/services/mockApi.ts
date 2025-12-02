@@ -34,20 +34,20 @@ export interface GameResult {
   duration: number;
 }
 
-// Anime avatars for profile pictures
+// Anime avatars with Ghibli-inspired character names
 export const ANIME_AVATARS = [
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Felix',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Aneka',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Milo',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Luna',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Kai',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Zara',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Neo',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Aria',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Ryu',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Yuki',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Hiro',
-  'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Sakura',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Chihiro&backgroundColor=b6e3f4',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Totoro&backgroundColor=c0aede',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Ponyo&backgroundColor=ffdfbf',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Kiki&backgroundColor=d1d4f9',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Howl&backgroundColor=ffd5dc',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Sophie&backgroundColor=c1f4c5',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Nausicaa&backgroundColor=b6e3f4',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Ashitaka&backgroundColor=c0aede',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=SanMononoke&backgroundColor=ffdfbf',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Haku&backgroundColor=d1d4f9',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Calcifer&backgroundColor=ffd5dc',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=JiJi&backgroundColor=c1f4c5',
 ];
 
 // Mock data
