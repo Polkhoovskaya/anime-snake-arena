@@ -10,9 +10,10 @@ import {
   isValidDirectionChange,
   getOppositeDirection,
   generateFood,
+  simulateAIMove,
   GRID_SIZE,
   POINTS_PER_FOOD,
-} from './snakeLogic';
+} from '../game/snakeLogic';
 
 describe('Snake Game Logic', () => {
   describe('createInitialState', () => {
@@ -109,7 +110,6 @@ describe('Snake Game Logic', () => {
     it('should grow snake when eating food', () => {
       let state = createInitialState();
       state = startGame(state);
-      // Place food directly in front of snake
       state.food = { x: state.snake[0].x + 1, y: state.snake[0].y };
       const initialLength = state.snake.length;
       state = moveSnake(state);
@@ -120,7 +120,6 @@ describe('Snake Game Logic', () => {
     it('should end game on wall collision in walls mode', () => {
       let state = createInitialState('walls');
       state = startGame(state);
-      // Move snake to right edge
       state.snake = [{ x: GRID_SIZE - 1, y: 10 }];
       state = moveSnake(state);
       expect(state.status).toBe('game-over');
@@ -129,7 +128,6 @@ describe('Snake Game Logic', () => {
     it('should wrap around in pass-through mode', () => {
       let state = createInitialState('pass-through');
       state = startGame(state);
-      // Move snake to right edge
       state.snake = [{ x: GRID_SIZE - 1, y: 10 }, { x: GRID_SIZE - 2, y: 10 }];
       state = moveSnake(state);
       expect(state.snake[0].x).toBe(0);
@@ -139,7 +137,6 @@ describe('Snake Game Logic', () => {
     it('should end game on self collision', () => {
       let state = createInitialState();
       state = startGame(state);
-      // Create a snake that will collide with itself
       state.snake = [
         { x: 5, y: 5 },
         { x: 6, y: 5 },
@@ -238,6 +235,29 @@ describe('Snake Game Logic', () => {
       state.food = { x: state.snake[0].x + 1, y: state.snake[0].y };
       state = moveSnake(state);
       expect(state.speed).toBeLessThan(initialSpeed);
+    });
+  });
+
+  describe('simulateAIMove', () => {
+    it('should return a valid game state', () => {
+      let state = createInitialState();
+      state = startGame(state);
+      const newState = simulateAIMove(state);
+      expect(newState.status).toBe('playing');
+      expect(newState.snake.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should change direction randomly', () => {
+      let state = createInitialState();
+      state = startGame(state);
+      const directions: string[] = [];
+      for (let i = 0; i < 50; i++) {
+        state = simulateAIMove(state);
+        directions.push(state.direction);
+      }
+      // Should have some variety in directions
+      const uniqueDirections = new Set(directions);
+      expect(uniqueDirections.size).toBeGreaterThan(1);
     });
   });
 });
