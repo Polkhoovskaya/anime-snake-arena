@@ -145,8 +145,9 @@ describe('Snake Game Logic', () => {
         { x: 4, y: 4 },
         { x: 4, y: 5 },
       ];
-      state.direction = 'LEFT';
-      state.nextDirection = 'LEFT';
+      // Move UP into (5, 4) which is a body part, not the tail
+      state.direction = 'UP';
+      state.nextDirection = 'UP';
       state = moveSnake(state);
       expect(state.status).toBe('game-over');
     });
