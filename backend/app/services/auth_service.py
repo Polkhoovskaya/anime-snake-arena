@@ -1,5 +1,5 @@
 """Authentication service for JWT token handling and password hashing."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Optional
 from jose import JWTError, jwt
 import bcrypt
@@ -25,9 +25,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode = data.copy()
     
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(days=settings.ACCESS_TOKEN_EXPIRE_DAYS)
+        expire = datetime.now(UTC) + timedelta(days=settings.ACCESS_TOKEN_EXPIRE_DAYS)
     
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
@@ -76,7 +76,7 @@ def create_user(username: str, email: str, password: str, avatar: str) -> Option
         hashed_password=hashed_password,
         high_score=0,
         games_played=0,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
     
     return db.create_user(user)

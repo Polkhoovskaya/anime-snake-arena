@@ -1,8 +1,11 @@
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     """Application settings."""
+    
+    model_config = ConfigDict(env_file=".env")
     
     # JWT Settings
     SECRET_KEY: str = "your-secret-key-change-in-production-use-env-var"
@@ -16,9 +19,6 @@ class Settings(BaseSettings):
     
     # CORS Settings
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
-    
-    class Config:
-        env_file = ".env"
 
 
 settings = Settings()

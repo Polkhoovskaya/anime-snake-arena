@@ -1,5 +1,5 @@
 """Mock database using in-memory dictionaries."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Dict, List, Optional
 from app.models.user import UserInDB
 from app.models.game import GameMode
@@ -68,7 +68,7 @@ class MockDatabase:
                 high_score=user_data["high_score"],
                 games_played=user_data["games_played"],
                 hashed_password=hash_password(user_data["password"]),
-                created_at=datetime.utcnow() - timedelta(days=30),
+                created_at=datetime.now(UTC) - timedelta(days=30),
             )
             self.users[user.id] = user
         
@@ -79,28 +79,28 @@ class MockDatabase:
                 "user_id": "1",
                 "score": 2450,
                 "mode": GameMode.WALLS,
-                "date": datetime.utcnow() - timedelta(days=1),
+                "date": datetime.now(UTC) - timedelta(days=1),
             },
             {
                 "id": "2",
                 "user_id": "2",
                 "score": 2100,
                 "mode": GameMode.WALLS,
-                "date": datetime.utcnow() - timedelta(days=2),
+                "date": datetime.now(UTC) - timedelta(days=2),
             },
             {
                 "id": "3",
                 "user_id": "3",
                 "score": 1850,
                 "mode": GameMode.PASS_THROUGH,
-                "date": datetime.utcnow() - timedelta(days=3),
+                "date": datetime.now(UTC) - timedelta(days=3),
             },
             {
                 "id": "4",
                 "user_id": "1",
                 "score": 1920,
                 "mode": GameMode.PASS_THROUGH,
-                "date": datetime.utcnow() - timedelta(days=4),
+                "date": datetime.now(UTC) - timedelta(days=4),
             },
         ]
         
@@ -112,7 +112,7 @@ class MockDatabase:
                 "score": 340,
                 "mode": GameMode.WALLS,
                 "viewers": 12,
-                "started_at": datetime.utcnow() - timedelta(minutes=5),
+                "started_at": datetime.now(UTC) - timedelta(minutes=5),
             }
         }
     
@@ -161,7 +161,7 @@ class MockDatabase:
             "score": score,
             "mode": mode,
             "duration": duration,
-            "date": datetime.utcnow(),
+            "date": datetime.now(UTC),
         }
         self.scores.append(score_entry)
         

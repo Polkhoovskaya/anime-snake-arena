@@ -1,5 +1,5 @@
-from datetime import datetime
-from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime, UTC
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class UserBase(BaseModel):
@@ -22,14 +22,12 @@ class UserUpdate(BaseModel):
 
 class User(UserBase):
     """Public user model."""
+    model_config = ConfigDict(populate_by_name=True, from_attributes=True)
+    
     id: str
     high_score: int = Field(default=0, alias="highScore")
     games_played: int = Field(default=0, alias="gamesPlayed")
-    created_at: datetime = Field(default_factory=datetime.utcnow, alias="createdAt")
-    
-    class Config:
-        populate_by_name = True
-        from_attributes = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), alias="createdAt")
 
 
 class UserInDB(User):
