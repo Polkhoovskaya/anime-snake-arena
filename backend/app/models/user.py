@@ -24,7 +24,7 @@ class User(UserBase):
     """Public user model."""
     model_config = ConfigDict(populate_by_name=True, from_attributes=True)
     
-    id: str
+    id: int
     high_score: int = Field(default=0, alias="highScore")
     games_played: int = Field(default=0, alias="gamesPlayed")
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC), alias="createdAt")

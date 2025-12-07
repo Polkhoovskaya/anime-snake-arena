@@ -1,8 +1,10 @@
 """Live games router for spectating active games."""
 from typing import Optional
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends
+from sqlalchemy.orm import Session
 from app.models.game import LiveGame, GameMode
-from app.database.mock_db import db
+from app.database.database import get_db
+from app.services import db_service
 
 
 router = APIRouter(prefix="/games/live", tags=["Live Games"])
@@ -11,20 +13,21 @@ router = APIRouter(prefix="/games/live", tags=["Live Games"])
 @router.get("", response_model=list[LiveGame])
 async def get_live_games(
     mode: Optional[GameMode] = Query(None, description="Filter by game mode"),
+    db: Session = Depends(get_db)
 ):
     """Get list of currently active games."""
-    # Get live games from database
-    games = db.get_live_games(mode=mode)
+    # Get live games from service
+    games = db_service.get_live_games(mode=mode)
     
     # Build live game responses
     live_games = []
     for game in games:
-        user = db.get_user_by_id(game["player_id"])
+        user = db_service.get_user_by_id(db, int(game["player_id"]))
         if user:
-            user_dict = user.model_dump(by_alias=True, exclude={"hashed_password"})
+            # Manually convert to dict/model as needed
             live_game = LiveGame(
                 id=game["id"],
-                player=user_dict,
+                player=user,
                 score=game["score"],
                 mode=game["mode"],
                 viewers=game["viewers"],
@@ -36,9 +39,9 @@ async def get_live_games(
 
 
 @router.get("/{game_id}", response_model=LiveGame)
-async def get_live_game(game_id: str):
+async def get_live_game(game_id: str, db: Session = Depends(get_db)):
     """Get details of a specific live game."""
-    game = db.get_live_game(game_id)
+    game = db_service.get_live_game(game_id)
     
     if not game:
         raise HTTPException(
@@ -47,18 +50,16 @@ async def get_live_game(game_id: str):
         )
     
     # Get player information
-    user = db.get_user_by_id(game["player_id"])
+    user = db_service.get_user_by_id(db, int(game["player_id"]))
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Player not found",
         )
     
-    user_dict = user.model_dump(by_alias=True, exclude={"hashed_password"})
-    
     return LiveGame(
         id=game["id"],
-        player=user_dict,
+        player=user,
         score=game["score"],
         mode=game["mode"],
         viewers=game["viewers"],

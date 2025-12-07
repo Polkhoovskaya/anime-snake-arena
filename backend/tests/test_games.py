@@ -45,7 +45,14 @@ def test_submit_score_new_high_score(client, auth_headers):
 
 def test_submit_score_not_high_score(client, existing_user_token):
     """Test submitting a score that's not a new high score."""
-    # User 1 has high score of 2450
+    # First submit a high score
+    client.post(
+        "/api/games/score",
+        json={"score": 2450, "mode": "walls", "duration": 300},
+        headers=existing_user_token
+    )
+    
+    # Now submit a lower score
     game_result = {
         "score": 100,
         "mode": "walls",

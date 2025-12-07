@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from app.models.user import User
 
 
 class LoginRequest(BaseModel):
@@ -16,14 +17,14 @@ class Token(BaseModel):
 class LoginResponse(BaseModel):
     """Login response model."""
     success: bool = True
-    user: dict
+    user: User
     token: str
 
 
 class SignupResponse(BaseModel):
     """Signup response model."""
     success: bool = True
-    user: dict
+    user: User
     token: str
 
 

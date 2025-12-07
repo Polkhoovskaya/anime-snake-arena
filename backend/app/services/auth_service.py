@@ -3,9 +3,11 @@ from datetime import datetime, timedelta, UTC
 from typing import Optional
 from jose import JWTError, jwt
 import bcrypt
+from sqlalchemy.orm import Session
 from app.config import settings
-from app.models.user import UserInDB
-from app.database.mock_db import db
+from app.models.user import UserCreate
+from app.database import models
+from app.services import db_service
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -46,9 +48,9 @@ def decode_access_token(token: str) -> Optional[str]:
         return None
 
 
-def authenticate_user(email: str, password: str) -> Optional[UserInDB]:
+def authenticate_user(db: Session, email: str, password: str) -> Optional[models.User]:
     """Authenticate a user by email and password."""
-    user = db.get_user_by_email(email)
+    user = db_service.get_user_by_email(db, email)
     if not user:
         return None
     if not verify_password(password, user.hashed_password):
@@ -56,27 +58,14 @@ def authenticate_user(email: str, password: str) -> Optional[UserInDB]:
     return user
 
 
-def create_user(username: str, email: str, password: str, avatar: str) -> Optional[UserInDB]:
+def create_user(db: Session, user_data: UserCreate) -> Optional[models.User]:
     """Create a new user."""
     # Check if email already exists
-    if db.get_user_by_email(email):
+    if db_service.get_user_by_email(db, user_data.email):
         return None
     
     # Check if username already exists
-    if db.get_user_by_username(username):
+    if db_service.get_user_by_username(db, user_data.username):
         return None
     
-    # Create user
-    hashed_password = get_password_hash(password)
-    user = UserInDB(
-        id="",  # Will be set by database
-        username=username,
-        email=email,
-        avatar=avatar,
-        hashed_password=hashed_password,
-        high_score=0,
-        games_played=0,
-        created_at=datetime.now(UTC),
-    )
-    
-    return db.create_user(user)
+    return db_service.create_user(db, user_data)

@@ -2,27 +2,38 @@
 import pytest
 
 
-def test_signup_success(client, test_user):
+def test_signup_success(client):
     """Test successful user signup."""
-    response = client.post("/api/auth/signup", json=test_user)
+    new_user = {
+        "username": "NewUser",
+        "email": "new@example.com",
+        "password": "newpassword123",
+        "avatar": "https://api.dicebear.com/7.x/lorelei/svg?seed=New"
+    }
+    response = client.post("/api/auth/signup", json=new_user)
     
     assert response.status_code == 201
     data = response.json()
     assert data["success"] is True
     assert "token" in data
-    assert data["user"]["username"] == test_user["username"]
-    assert data["user"]["email"] == test_user["email"]
+    assert data["user"]["username"] == new_user["username"]
+    assert data["user"]["email"] == new_user["email"]
     assert "password" not in data["user"]
     assert "hashed_password" not in data["user"]
 
 
 def test_signup_duplicate_email(client, test_user):
     """Test signup with duplicate email."""
-    # First signup
-    client.post("/api/auth/signup", json=test_user)
+    # test_user is already created in DB by fixture
     
     # Try to signup again with same email
-    response = client.post("/api/auth/signup", json=test_user)
+    new_user = {
+        "username": "AnotherUser",
+        "email": test_user["email"],  # Same email
+        "password": "password123",
+        "avatar": "https://api.dicebear.com/7.x/lorelei/svg?seed=Another"
+    }
+    response = client.post("/api/auth/signup", json=new_user)
     
     assert response.status_code == 400
     data = response.json()
@@ -31,13 +42,16 @@ def test_signup_duplicate_email(client, test_user):
 
 def test_signup_duplicate_username(client, test_user):
     """Test signup with duplicate username."""
-    # First signup
-    client.post("/api/auth/signup", json=test_user)
+    # test_user is already created in DB by fixture
     
     # Try to signup with different email but same username
-    duplicate_user = test_user.copy()
-    duplicate_user["email"] = "different@example.com"
-    response = client.post("/api/auth/signup", json=duplicate_user)
+    new_user = {
+        "username": test_user["username"],  # Same username
+        "email": "different@example.com",
+        "password": "password123",
+        "avatar": "https://api.dicebear.com/7.x/lorelei/svg?seed=Different"
+    }
+    response = client.post("/api/auth/signup", json=new_user)
     
     assert response.status_code == 400
     data = response.json()
@@ -46,8 +60,7 @@ def test_signup_duplicate_username(client, test_user):
 
 def test_login_success(client, test_user):
     """Test successful login."""
-    # First create a user
-    client.post("/api/auth/signup", json=test_user)
+    # User is already created by fixture
     
     # Now login
     response = client.post(
@@ -76,8 +89,7 @@ def test_login_invalid_email(client):
 
 def test_login_invalid_password(client, test_user):
     """Test login with invalid password."""
-    # Create a user
-    client.post("/api/auth/signup", json=test_user)
+    # User is already created by fixture
     
     # Try to login with wrong password
     response = client.post(

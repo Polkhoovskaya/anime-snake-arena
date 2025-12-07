@@ -2,7 +2,43 @@
 import pytest
 
 
-def test_get_leaderboard(client):
+@pytest.fixture
+def populated_leaderboard(db_session):
+    """Populate database with scores for leaderboard tests."""
+    from app.services import db_service
+    from app.models.user import UserCreate
+    from app.models.game import GameMode
+    
+    # Create users and scores
+    for i in range(5):
+        user_data = UserCreate(
+            username=f"Player{i}",
+            email=f"player{i}@example.com",
+            password="password123",
+            avatar=f"https://api.dicebear.com/7.x/lorelei/svg?seed={i}"
+        )
+        user = db_service.create_user(db_session, user_data)
+        
+        # Add score
+        db_service.add_score(
+            db_session,
+            user_id=user.id,
+            score=100 * (i + 1),
+            mode=GameMode.PASS_THROUGH,
+            duration=60
+        )
+        
+        # Add score for walls mode
+        db_service.add_score(
+            db_session,
+            user_id=user.id,
+            score=50 * (i + 1),
+            mode=GameMode.WALLS,
+            duration=60
+        )
+
+
+def test_get_leaderboard(client, populated_leaderboard):
     """Test getting the leaderboard."""
     response = client.get("/api/leaderboard")
     
@@ -27,7 +63,7 @@ def test_get_leaderboard(client):
         assert data[i]["score"] >= data[i + 1]["score"]
 
 
-def test_get_leaderboard_filter_by_mode(client):
+def test_get_leaderboard_filter_by_mode(client, populated_leaderboard):
     """Test filtering leaderboard by game mode."""
     response = client.get("/api/leaderboard?mode=walls")
     
@@ -40,7 +76,7 @@ def test_get_leaderboard_filter_by_mode(client):
         assert entry["mode"] == "walls"
 
 
-def test_get_leaderboard_pagination(client):
+def test_get_leaderboard_pagination(client, populated_leaderboard):
     """Test leaderboard pagination."""
     # Get first 2 entries
     response1 = client.get("/api/leaderboard?limit=2&offset=0")

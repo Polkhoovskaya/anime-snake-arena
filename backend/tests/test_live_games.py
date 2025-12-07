@@ -2,7 +2,7 @@
 import pytest
 
 
-def test_get_live_games(client):
+def test_get_live_games(client, populated_live_games):
     """Test getting list of live games."""
     response = client.get("/api/games/live")
     
@@ -21,7 +21,7 @@ def test_get_live_games(client):
         assert "startedAt" in game
 
 
-def test_get_live_games_filter_by_mode(client):
+def test_get_live_games_filter_by_mode(client, populated_live_games):
     """Test filtering live games by mode."""
     response = client.get("/api/games/live?mode=walls")
     
@@ -34,7 +34,50 @@ def test_get_live_games_filter_by_mode(client):
         assert game["mode"] == "walls"
 
 
-def test_get_live_game_by_id(client):
+@pytest.fixture
+def populated_live_games(db_session):
+    """Populate live games for tests."""
+    from app.services import db_service
+    from app.models.user import UserCreate
+    from app.models.game import GameMode
+    from datetime import datetime, UTC
+    
+    # Create a player
+    user_data = UserCreate(
+        username="LivePlayer",
+        email="live@example.com",
+        password="password123",
+        avatar="https://api.dicebear.com/7.x/lorelei/svg?seed=Live"
+    )
+    user = db_service.create_user(db_session, user_data)
+    
+    # Add live game directly to service memory
+    db_service._live_games["live1"] = {
+        "id": "live1",
+        "player_id": user.id,
+        "score": 150,
+        "mode": GameMode.PASS_THROUGH,
+        "viewers": 5,
+        "started_at": datetime.now(UTC)
+    }
+    
+    # Add another for walls mode
+    db_service._live_games["live2"] = {
+        "id": "live2",
+        "player_id": user.id,
+        "score": 200,
+        "mode": GameMode.WALLS,
+        "viewers": 10,
+        "started_at": datetime.now(UTC)
+    }
+    
+    yield
+    
+    # Cleanup
+    db_service._live_games.clear()
+
+
+def test_get_live_game_by_id(client, populated_live_games):
     """Test getting a specific live game."""
     response = client.get("/api/games/live/live1")
     
@@ -57,7 +100,7 @@ def test_get_live_game_not_found(client):
     assert "Game not found" in data["detail"]
 
 
-def test_live_game_player_info(client):
+def test_live_game_player_info(client, populated_live_games):
     """Test that live game includes player information."""
     response = client.get("/api/games/live/live1")
     

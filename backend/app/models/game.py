@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
+from app.models.user import User
 
 
 class GameMode(str, Enum):
@@ -30,7 +31,7 @@ class LeaderboardEntry(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     
     rank: int = Field(..., ge=1)
-    user: dict
+    user: User
     score: int = Field(..., ge=0)
     mode: GameMode
     date: datetime
@@ -41,7 +42,7 @@ class LiveGame(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     
     id: str
-    player: dict
+    player: User
     score: int = Field(..., ge=0)
     mode: GameMode
     viewers: int = Field(..., ge=0)

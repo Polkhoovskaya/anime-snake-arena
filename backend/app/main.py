@@ -12,6 +12,11 @@ app = FastAPI(
     description="Backend API for the Snake Arena game application",
 )
 
+# Create database tables
+from app.database import models
+from app.database.database import engine
+models.Base.metadata.create_all(bind=engine)
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,

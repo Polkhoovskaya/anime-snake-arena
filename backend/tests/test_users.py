@@ -8,7 +8,7 @@ def test_get_user_by_id(client, existing_user_token):
     
     assert response.status_code == 200
     data = response.json()
-    assert data["id"] == "1"
+    assert data["id"] == 1
     assert data["username"] == "SnakeMaster"
     assert "password" not in data
     assert "hashed_password" not in data
@@ -53,7 +53,7 @@ def test_update_profile_username(client, auth_headers):
     assert data["user"]["username"] == "NewUsername"
 
 
-def test_update_profile_duplicate_username(client, auth_headers):
+def test_update_profile_duplicate_username(client, auth_headers, existing_user_token):
     """Test updating to an already taken username."""
     response = client.patch(
         "/api/users/profile",
