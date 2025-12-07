@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { mockApi } from '../services/mockApi';
 import GameCanvas from '../components/GameCanvas';
@@ -17,8 +18,20 @@ import {
 import { toast } from 'sonner';
 
 export default function PlayPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [gameState, setGameState] = useState<GameState>(() => createInitialState());
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      toast.error('Please log in to play!');
+      navigate('/auth');
+    }
+  }, [user, isLoading, navigate]);
+
+  if (isLoading || !user) {
+    return null; // Or a loading spinner
+  }
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const keyDirectionMap: Record<string, Direction> = {
@@ -56,7 +69,7 @@ export default function PlayPage() {
     const gameLoop = setInterval(() => {
       setGameState(prev => {
         const newState = moveSnake(prev);
-        
+
         // Check for game over
         if (newState.status === 'game-over' && prev.status === 'playing') {
           // Submit score
@@ -72,7 +85,7 @@ export default function PlayPage() {
             }
           });
         }
-        
+
         return newState;
       });
     }, gameState.speed);
@@ -135,9 +148,9 @@ export default function PlayPage() {
               <h2 className="h3 text-danger mb-3">💀 Game Over!</h2>
               <p className="display-4 fw-bold text-primary mb-3">{gameState.score}</p>
               <p className="text-muted mb-4">
-                {gameState.score >= 200 ? 'Amazing run! 🔥' : 
-                 gameState.score >= 100 ? 'Great job! 👏' : 
-                 gameState.score >= 50 ? 'Nice try! 💪' : 'Keep practicing! 🎯'}
+                {gameState.score >= 200 ? 'Amazing run! 🔥' :
+                  gameState.score >= 100 ? 'Great job! 👏' :
+                    gameState.score >= 50 ? 'Nice try! 💪' : 'Keep practicing! 🎯'}
               </p>
               <button onClick={handleStart} className="btn btn-primary btn-lg">
                 🔄 Play Again

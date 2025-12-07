@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { mockApi, ANIME_AVATARS } from '../services/mockApi';
 
 // Mock localStorage
@@ -20,272 +20,212 @@ const localStorageMock = (() => {
 
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-describe('MockApiService', () => {
+// Mock fetch
+const fetchMock = vi.fn();
+global.fetch = fetchMock;
+
+describe('ApiService', () => {
   beforeEach(() => {
     localStorageMock.clear();
+    fetchMock.mockReset();
     vi.clearAllMocks();
   });
+
+  const mockUser = {
+    id: '1',
+    username: 'SnakeMaster',
+    email: 'snake@test.com',
+    avatar: ANIME_AVATARS[0],
+    highScore: 1000,
+    gamesPlayed: 10,
+    createdAt: new Date().toISOString(),
+  };
 
   describe('Authentication', () => {
     describe('login', () => {
       it('should login with valid credentials', async () => {
+        fetchMock.mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true, user: mockUser, token: 'fake-token' }),
+        });
+
         const result = await mockApi.login('snake@test.com', 'password123');
+
+        expect(fetchMock).toHaveBeenCalledWith('/api/auth/login', expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ email: 'snake@test.com', password: 'password123' }),
+        }));
         expect(result.success).toBe(true);
-        expect(result.user).toBeDefined();
-        expect(result.user?.username).toBe('SnakeMaster');
+        expect(result.user).toEqual(mockUser);
+        expect(localStorageMock.setItem).toHaveBeenCalledWith('snake_game_token', 'fake-token');
       });
 
-      it('should fail login with invalid email', async () => {
-        const result = await mockApi.login('invalid@test.com', 'password123');
+      it('should handle login failure', async () => {
+        fetchMock.mockResolvedValueOnce({
+          ok: false,
+          json: async () => ({ success: false, error: 'Invalid credentials' }),
+        });
+
+        const result = await mockApi.login('snake@test.com', 'wrongpass');
+
         expect(result.success).toBe(false);
-        expect(result.error).toBe('Invalid email or password');
-      });
-
-      it('should fail login with short password', async () => {
-        const result = await mockApi.login('snake@test.com', '123');
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('Invalid email or password');
-      });
-
-      it('should store user in localStorage after login', async () => {
-        await mockApi.login('snake@test.com', 'password123');
-        expect(localStorageMock.setItem).toHaveBeenCalled();
+        expect(result.error).toBe('Invalid credentials');
       });
     });
 
     describe('signup', () => {
-      it('should create new user with valid data', async () => {
-        const result = await mockApi.signup(
-          'NewPlayer',
-          'new@test.com',
-          'password123',
-          ANIME_AVATARS[0]
-        );
+      it('should create new user', async () => {
+        fetchMock.mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true, user: mockUser, token: 'fake-token' }),
+        });
+
+        const result = await mockApi.signup('SnakeMaster', 'snake@test.com', 'password123', ANIME_AVATARS[0]);
+
+        expect(fetchMock).toHaveBeenCalledWith('/api/auth/signup', expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            username: 'SnakeMaster',
+            email: 'snake@test.com',
+            password: 'password123',
+            avatar: ANIME_AVATARS[0],
+          }),
+        }));
         expect(result.success).toBe(true);
-        expect(result.user?.username).toBe('NewPlayer');
-        expect(result.user?.email).toBe('new@test.com');
-        expect(result.user?.highScore).toBe(0);
-        expect(result.user?.gamesPlayed).toBe(0);
-      });
-
-      it('should fail signup with existing email', async () => {
-        const result = await mockApi.signup(
-          'AnotherUser',
-          'snake@test.com',
-          'password123',
-          ANIME_AVATARS[0]
-        );
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('Email already exists');
-      });
-
-      it('should fail signup with existing username', async () => {
-        const result = await mockApi.signup(
-          'SnakeMaster',
-          'unique@test.com',
-          'password123',
-          ANIME_AVATARS[0]
-        );
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('Username already taken');
       });
     });
 
     describe('logout', () => {
-      it('should clear user session', async () => {
-        await mockApi.login('snake@test.com', 'password123');
+      it('should call logout endpoint and clear storage', async () => {
+        fetchMock.mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true }),
+        });
+
         await mockApi.logout();
-        expect(mockApi.getCurrentUser()).toBe(null);
+
+        expect(fetchMock).toHaveBeenCalledWith('/api/auth/logout', expect.objectContaining({
+          method: 'POST',
+        }));
+        expect(localStorageMock.removeItem).toHaveBeenCalledWith('snake_game_token');
         expect(localStorageMock.removeItem).toHaveBeenCalledWith('snake_game_user');
-      });
-    });
-
-    describe('getCurrentUser', () => {
-      it('should return null when not logged in', async () => {
-        await mockApi.logout();
-        expect(mockApi.getCurrentUser()).toBe(null);
-      });
-
-      it('should return user when logged in', async () => {
-        await mockApi.login('snake@test.com', 'password123');
-        const user = mockApi.getCurrentUser();
-        expect(user).not.toBe(null);
-        expect(user?.username).toBe('SnakeMaster');
       });
     });
   });
 
-  describe('Profile', () => {
-    describe('updateProfile', () => {
-      it('should update user profile when logged in', async () => {
-        await mockApi.login('snake@test.com', 'password123');
-        const result = await mockApi.updateProfile({ avatar: ANIME_AVATARS[5] });
-        expect(result.success).toBe(true);
-        expect(result.user?.avatar).toBe(ANIME_AVATARS[5]);
+  describe('Session Verification', () => {
+    it('should verify valid session', async () => {
+      // Mock login response
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, user: mockUser, token: 'valid-token' }),
+      });
+      // Mock verifySession response
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockUser,
       });
 
-      it('should fail to update profile when not logged in', async () => {
-        await mockApi.logout();
-        const result = await mockApi.updateProfile({ avatar: ANIME_AVATARS[5] });
-        expect(result.success).toBe(false);
+      await mockApi.login('snake@test.com', 'password123'); // Sets token
+
+      const user = await mockApi.verifySession();
+
+      expect(fetchMock).toHaveBeenLastCalledWith('/api/auth/me', expect.any(Object));
+      expect(user).toEqual(mockUser);
+    });
+
+    it('should clear session on invalid token', async () => {
+      // Mock login response
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, user: mockUser, token: 'valid-token' }),
       });
+      // Mock verifySession response (failure)
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Invalid token' }),
+      });
+
+      await mockApi.login('snake@test.com', 'password123'); // Sets token
+
+      const user = await mockApi.verifySession();
+
+      expect(user).toBe(null);
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('snake_game_token');
     });
   });
 
   describe('Leaderboard', () => {
-    describe('getLeaderboard', () => {
-      it('should return leaderboard entries', async () => {
-        const entries = await mockApi.getLeaderboard();
-        expect(entries.length).toBeGreaterThan(0);
-        expect(entries[0].rank).toBe(1);
+    it('should fetch leaderboard', async () => {
+      const mockEntries = [{ rank: 1, user: mockUser, score: 1000, mode: 'walls', date: new Date().toISOString() }];
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockEntries,
       });
 
-      it('should return entries sorted by score descending', async () => {
-        const entries = await mockApi.getLeaderboard();
-        for (let i = 1; i < entries.length; i++) {
-          expect(entries[i - 1].score).toBeGreaterThanOrEqual(entries[i].score);
-        }
+      const entries = await mockApi.getLeaderboard();
+
+      expect(fetchMock).toHaveBeenCalledWith('/api/leaderboard', expect.any(Object));
+      expect(entries).toEqual(mockEntries);
+    });
+
+    it('should fetch leaderboard with mode filter', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
       });
 
-      it('should filter by mode when specified', async () => {
-        const wallsEntries = await mockApi.getLeaderboard('walls');
-        wallsEntries.forEach(entry => {
-          expect(entry.mode).toBe('walls');
-        });
+      await mockApi.getLeaderboard('walls');
 
-        const passThroughEntries = await mockApi.getLeaderboard('pass-through');
-        passThroughEntries.forEach(entry => {
-          expect(entry.mode).toBe('pass-through');
-        });
-      });
-
-      it('should include user data in entries', async () => {
-        const entries = await mockApi.getLeaderboard();
-        entries.forEach(entry => {
-          expect(entry.user).toBeDefined();
-          expect(entry.user.username).toBeDefined();
-          expect(entry.user.avatar).toBeDefined();
-        });
-      });
+      expect(fetchMock).toHaveBeenCalledWith('/api/leaderboard?mode=walls', expect.any(Object));
     });
   });
 
   describe('Live Games', () => {
-    describe('getLiveGames', () => {
-      it('should return live games', async () => {
-        const games = await mockApi.getLiveGames();
-        expect(games.length).toBeGreaterThan(0);
+    it('should fetch live games', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
       });
 
-      it('should include player data in games', async () => {
-        const games = await mockApi.getLiveGames();
-        games.forEach(game => {
-          expect(game.player).toBeDefined();
-          expect(game.player.username).toBeDefined();
-        });
-      });
+      await mockApi.getLiveGames();
 
-      it('should include game mode', async () => {
-        const games = await mockApi.getLiveGames();
-        games.forEach(game => {
-          expect(['walls', 'pass-through']).toContain(game.mode);
-        });
-      });
+      expect(fetchMock).toHaveBeenCalledWith('/api/games/live', expect.any(Object));
     });
 
-    describe('getLiveGame', () => {
-      it('should return specific game by id', async () => {
-        const game = await mockApi.getLiveGame('live1');
-        expect(game).not.toBe(null);
-        expect(game?.id).toBe('live1');
+    it('should fetch specific live game', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'live1' }),
       });
 
-      it('should return null for non-existent game', async () => {
-        const game = await mockApi.getLiveGame('non-existent');
-        expect(game).toBe(null);
-      });
+      await mockApi.getLiveGame('live1');
+
+      expect(fetchMock).toHaveBeenCalledWith('/api/games/live/live1', expect.any(Object));
     });
   });
 
   describe('Game Score', () => {
-    describe('submitScore', () => {
-      it('should submit score when logged in', async () => {
-        await mockApi.login('snake@test.com', 'password123');
-        const result = await mockApi.submitScore({
-          score: 100,
-          mode: 'walls',
-          duration: 60,
-        });
-        expect(result.success).toBe(true);
+    it('should submit score', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, newHighScore: true }),
       });
 
-      it('should detect new high score', async () => {
-        await mockApi.login('snake@test.com', 'password123');
-        const user = mockApi.getCurrentUser();
-        const result = await mockApi.submitScore({
-          score: (user?.highScore || 0) + 1000,
-          mode: 'walls',
-          duration: 120,
-        });
-        expect(result.newHighScore).toBe(true);
-      });
+      const result = await mockApi.submitScore({ score: 100, mode: 'walls', duration: 60 });
 
-      it('should not flag as high score if lower than current', async () => {
-        await mockApi.login('snake@test.com', 'password123');
-        const result = await mockApi.submitScore({
-          score: 10,
-          mode: 'walls',
-          duration: 30,
-        });
-        expect(result.newHighScore).toBe(false);
-      });
-
-      it('should increment games played', async () => {
-        await mockApi.login('snake@test.com', 'password123');
-        const initialGames = mockApi.getCurrentUser()?.gamesPlayed || 0;
-        await mockApi.submitScore({
-          score: 50,
-          mode: 'pass-through',
-          duration: 45,
-        });
-        expect(mockApi.getCurrentUser()?.gamesPlayed).toBe(initialGames + 1);
-      });
+      expect(fetchMock).toHaveBeenCalledWith('/api/games/score', expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ score: 100, mode: 'walls', duration: 60 }),
+      }));
+      expect(result.newHighScore).toBe(true);
     });
   });
 
   describe('Avatars', () => {
-    describe('getAvatars', () => {
-      it('should return list of avatars', () => {
-        const avatars = mockApi.getAvatars();
-        expect(avatars.length).toBe(12);
-      });
-
-      it('should return valid avatar URLs', () => {
-        const avatars = mockApi.getAvatars();
-        avatars.forEach(avatar => {
-          expect(avatar).toMatch(/^https:\/\/api\.dicebear\.com/);
-        });
-      });
-
-      it('should include Ghibli-inspired names', () => {
-        const avatars = mockApi.getAvatars();
-        const ghibliNames = ['Chihiro', 'Totoro', 'Ponyo', 'Kiki', 'Howl', 'Sophie'];
-        ghibliNames.forEach(name => {
-          expect(avatars.some(a => a.includes(name))).toBe(true);
-        });
-      });
-    });
-  });
-
-  describe('ANIME_AVATARS constant', () => {
-    it('should have 12 avatars', () => {
-      expect(ANIME_AVATARS.length).toBe(12);
-    });
-
-    it('should use lorelei style', () => {
-      ANIME_AVATARS.forEach(avatar => {
-        expect(avatar).toContain('lorelei');
-      });
+    it('should return avatars constant', () => {
+      const avatars = mockApi.getAvatars();
+      expect(avatars).toEqual(ANIME_AVATARS);
     });
   });
 });

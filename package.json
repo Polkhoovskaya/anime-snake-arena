@@ -1,0 +1,14 @@
+{
+    "name": "anime-snake-arena-root",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+        "dev:backend": "cd backend && make run",
+        "dev:frontend": "cd frontend && npm run dev",
+        "install:all": "npm install && cd frontend && npm install && cd ../backend && make install"
+    },
+    "devDependencies": {
+        "concurrently": "^9.1.0"
+    }
+}

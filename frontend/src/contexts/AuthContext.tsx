@@ -17,10 +17,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const currentUser = mockApi.getCurrentUser();
-    setUser(currentUser);
-    setIsLoading(false);
+    const initAuth = async () => {
+      const user = await mockApi.verifySession();
+      setUser(user);
+      setIsLoading(false);
+    };
+    initAuth();
   }, []);
 
   const login = async (email: string, password: string) => {

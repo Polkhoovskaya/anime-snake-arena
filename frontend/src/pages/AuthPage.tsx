@@ -24,11 +24,15 @@ export default function AuthPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, login, signup } = useAuth();
-  
+
   const [isSignup, setIsSignup] = useState(searchParams.get('mode') === 'signup');
+
+  useEffect(() => {
+    setIsSignup(searchParams.get('mode') === 'signup');
+  }, [searchParams]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,7 +49,7 @@ export default function AuthPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    
+
     try {
       loginSchema.parse({ email, password });
     } catch (err) {
@@ -58,11 +62,11 @@ export default function AuthPage() {
         return;
       }
     }
-    
+
     setLoading(true);
     const result = await login(email, password);
     setLoading(false);
-    
+
     if (result.success) {
       toast.success('Welcome back!');
       navigate('/');
@@ -74,7 +78,7 @@ export default function AuthPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    
+
     try {
       signupSchema.parse({ username, email, password, confirmPassword });
     } catch (err) {
@@ -87,11 +91,11 @@ export default function AuthPage() {
         return;
       }
     }
-    
+
     setLoading(true);
     const result = await signup(username, email, password, selectedAvatar);
     setLoading(false);
-    
+
     if (result.success) {
       toast.success('Account created! Welcome to Snake Arena!');
       navigate('/');
@@ -129,7 +133,7 @@ export default function AuthPage() {
                     />
                     {errors.username && <div className="invalid-feedback">{errors.username}</div>}
                   </div>
-                  
+
                   <div className="mb-3">
                     <label className="form-label">Email</label>
                     <input
@@ -141,7 +145,7 @@ export default function AuthPage() {
                     />
                     {errors.email && <div className="invalid-feedback">{errors.email}</div>}
                   </div>
-                  
+
                   <div className="mb-3">
                     <label className="form-label">Password</label>
                     <input
@@ -153,7 +157,7 @@ export default function AuthPage() {
                     />
                     {errors.password && <div className="invalid-feedback">{errors.password}</div>}
                   </div>
-                  
+
                   <div className="mb-4">
                     <label className="form-label">Confirm Password</label>
                     <input
@@ -184,8 +188,8 @@ export default function AuthPage() {
                     </div>
                   </div>
 
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn btn-primary w-100 btn-lg mb-3"
                     disabled={loading}
                   >
@@ -205,7 +209,7 @@ export default function AuthPage() {
                     />
                     {errors.email && <div className="invalid-feedback">{errors.email}</div>}
                   </div>
-                  
+
                   <div className="mb-4">
                     <label className="form-label">Password</label>
                     <input
@@ -218,8 +222,8 @@ export default function AuthPage() {
                     {errors.password && <div className="invalid-feedback">{errors.password}</div>}
                   </div>
 
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn btn-primary w-100 btn-lg mb-3"
                     disabled={loading}
                   >

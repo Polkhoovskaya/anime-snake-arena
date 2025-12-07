@@ -56,6 +56,22 @@ class MockDatabase:
                 "high_score": 1850,
                 "games_played": 124,
             },
+            {
+                "username": "KikiWitch",
+                "email": "kiki@test.com",
+                "avatar": "https://api.dicebear.com/7.x/lorelei/svg?seed=Kiki&backgroundColor=d1d4f9",
+                "password": "password123",
+                "high_score": 1600,
+                "games_played": 45,
+            },
+            {
+                "username": "HowlWizard",
+                "email": "howl@test.com",
+                "avatar": "https://api.dicebear.com/7.x/lorelei/svg?seed=Howl&backgroundColor=ffd5dc",
+                "password": "password123",
+                "high_score": 2800,
+                "games_played": 210,
+            },
         ]
         
         for user_data in sample_users:
