@@ -1,0 +1,58 @@
+# Git
+.git
+.gitignore
+
+# Node modules
+node_modules
+frontend/node_modules
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/.venv
+backend/venv
+.venv
+venv
+*.egg-info
+.eggs
+dist
+build
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov
+coverage
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Development
+backend/.dockerignore
+frontend/.dockerignore
+docker-compose.yml
