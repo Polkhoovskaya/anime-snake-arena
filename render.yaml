@@ -2,22 +2,14 @@ services:
   # PostgreSQL Database
   - type: pserv
     name: anime-snake-arena-db
-    env: docker
     plan: starter
-    region: oregon
-    databaseName: snake_arena_db
-    databaseUser: snake_arena_user
-    ipAllowList: []
 
   # Web Service (Combined Frontend + Backend)
   - type: web
     name: anime-snake-arena
-    env: docker
-    region: oregon
+    runtime: docker
     plan: starter
     dockerfilePath: ./Dockerfile
-    dockerContext: .
-    branch: main
     healthCheckPath: /api/leaderboard
     envVars:
       - key: DATABASE_URL
