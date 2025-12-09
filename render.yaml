@@ -1,10 +1,8 @@
-services:
-  # PostgreSQL Database
-  - type: pserv
-    name: anime-snake-arena-db
+databases:
+  - name: anime-snake-arena-db
     plan: starter
 
-  # Web Service (Combined Frontend + Backend)
+services:
   - type: web
     name: anime-snake-arena
     env: docker
